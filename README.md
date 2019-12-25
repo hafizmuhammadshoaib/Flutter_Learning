@@ -1,3 +1,3 @@
-# Stop Watch
-A basic stop watch in flutter
+# Todo App
+A basic todo app with flutter
 
