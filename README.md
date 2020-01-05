@@ -1,3 +1,3 @@
-# Stop Watch
-A basic stop watch in flutter
+# API fetch
+Simple api fetch with http package 
 
