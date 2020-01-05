@@ -1,6 +1,11 @@
+import 'dart:convert';
+// import 'dart:js';
+
+import 'package:first_project/post.dart';
 import 'package:first_project/qoute.dart';
 import 'package:first_project/quote_card.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(MaterialApp(
       home: DataList(),
@@ -12,16 +17,55 @@ class DataList extends StatefulWidget {
 }
 
 class _DataList extends State<DataList> {
-  List<Quote> data = [
-    Quote(text: "Failure is a word unknown to me.", author: "M. Ali Jinnah"),
-    Quote(
-        text: "Expect the best, Prepare for the worst.",
-        author: "M. Ali Jinnah"),
-    Quote(
-        text:
-            "No struggle can ever succeed without women participating side by side with men.",
-        author: "M. Ali Jinnah"),
-  ];
+  Future<Post> post;
+  Future<List<Post>> posts;
+  List<Post> _posts = [];
+  bool isProgress = false;
+  @override
+  void initState() {
+    super.initState();
+    // post = fetchPost();
+    setState(() {
+      isProgress = true;
+    });
+    fetchPosts().then((value) {
+      setState(() {
+        _posts = value;
+        isProgress = false;
+      });
+    });
+  }
+
+  Future<Post> fetchPost() async {
+    final response =
+        await http.get('https://jsonplaceholder.typicode.com/posts/2');
+
+    if (response.statusCode == 200) {
+      // If server returns an OK response, parse the JSON.
+      return Post.fromJson(json.decode(response.body));
+    } else {
+      // If that response was not OK, throw an error.
+      throw Exception('Failed to load post');
+    }
+  }
+
+  Future<List<Post>> fetchPosts() async {
+    final response =
+        await http.get('https://jsonplaceholder.typicode.com/posts');
+
+    if (response.statusCode == 200) {
+      // If server returns an OK response, parse the JSON.
+
+      return (json.decode(response.body) as List)
+          .map((i) => Post.fromJson(i))
+          .toList();
+    } else {
+      // If that response was not OK, throw an error.
+      throw Exception('Failed to load post');
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +77,31 @@ class _DataList extends State<DataList> {
         backgroundColor: Colors.redAccent,
       ),
       body: Column(
-          children: data
-              .map((v) => QuoteCard(
-                    quote: v,
-                  ))
-              .toList()),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          isProgress
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(top: 14.0),
+                      child: CircularProgressIndicator(),
+                    )
+                  ],
+                )
+              : Row(),
+          Expanded(
+              child: ListView.builder(
+            itemCount: _posts.length,
+            itemBuilder: (BuildContext context, int index) {
+              return QuoteCard(post: _posts[index]);
+            },
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            physics: AlwaysScrollableScrollPhysics(),
+          )),
+        ],
+      ),
     );
   }
 }
